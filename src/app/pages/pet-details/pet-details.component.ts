@@ -1,26 +1,53 @@
-import { Component } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { Pet, pets } from '../../../data/pets';
+import { Component, effect, signal, computed } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { PetService } from '../../shared/services/pet.service';
+import { Pet } from '../../../data/pets';
 
 @Component({
   selector: 'app-pet-details',
   standalone: true,
-  imports: [],
+  imports: [CommonModule, RouterModule],
   templateUrl: './pet-details.component.html',
-  styleUrl: './pet-details.component.css'
+  styleUrl: './pet-details.component.css',
 })
 export class PetDetailsComponent {
-  pet: Pet | null = null;
-  pets = pets;
+  private id = Number(this.route.snapshot.paramMap.get('id') ?? '');
 
-  constructor(private route: ActivatedRoute, private router: Router) {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
-    const foundPet = pets.find((p) => p.id === id);
+  readonly pet = toSignal<Pet | null>(this.petService.getPet(this.id), {
+    initialValue: null,
+  });
+  readonly loading = signal(true);
+  readonly notFound = computed(() => this.pet() === null);
 
-    if (!foundPet) {
-      this.router.navigate(['/pets']);
-    } else {
-      this.pet = foundPet;
-    }
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private petService: PetService
+  ) {
+    effect(() => {
+      if (this.pet() !== null) {
+        this.loading.set(false);
+      }
+    });
+  }
+
+  adopt(): void {
+    const p = this.pet();
+    if (!p) return;
+    this.petService.deletePet(p.id).subscribe({
+      next: () => this.router.navigate(['/pets']),
+      error: (err: any) => console.error('Failed to adopt pet', err),
+    });
+  }
+
+  deletePet(): void {
+    const p = this.pet();
+    if (!p) return;
+    this.petService.deletePet(p.id).subscribe({
+      next: () => this.router.navigate(['/pets']),
+      error: (err: any) => console.error('Failed to delete pet', err),
+    });
   }
 }

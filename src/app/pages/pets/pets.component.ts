@@ -1,7 +1,9 @@
-import { Component } from '@angular/core';
+// src/app/pages/pets/pets.component.ts
+import { Component, computed, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { PetsHeaderComponent } from '../../components/pets-header/pets-header.component';
 import { PetsListComponent } from '../../components/pets-list/pets-list.component';
-import { pets } from '../../../data/pets';
+import { PetService } from '../../shared/services/pet.service';
 
 @Component({
   selector: 'app-pets',
@@ -11,16 +13,20 @@ import { pets } from '../../../data/pets';
   styleUrl: './pets.component.css',
 })
 export class PetsComponent {
-  query = '';
-  allPets = pets;
+  readonly petsArray = toSignal(this.petService.getPets(), {
+    initialValue: [],
+  });
 
-  setQuery(query: string) {
-    this.query = query;
-  }
+  readonly query = signal('');
 
-  get filteredPets() {
-    return this.allPets.filter((pet) =>
-      pet.name.toLowerCase().includes(this.query.toLowerCase())
-    );
+  readonly filteredPets = computed(() => {
+    const q = this.query().toLowerCase();
+    return this.petsArray().filter((p) => p.name.toLowerCase().includes(q));
+  });
+
+  constructor(private petService: PetService) {}
+
+  setQuery(q: string): void {
+    this.query.set(q);
   }
 }

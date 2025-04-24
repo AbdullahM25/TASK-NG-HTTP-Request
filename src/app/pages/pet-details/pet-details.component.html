@@ -1,30 +1,61 @@
-<div class="w-screen h-[90vh] flex justify-center items-center">
+<div
+  *ngIf="loading()"
+  class="w-screen h-[90vh] flex justify-center items-center"
+>
+  <p>Loading pet details…</p>
+</div>
+
+<div
+  *ngIf="!loading() && !notFound() && pet() as p"
+  class="w-screen h-[90vh] flex justify-center items-center"
+>
   <div
     class="border border-black rounded-md w-[70%] h-[70%] overflow-hidden flex flex-col md:flex-row p-5"
   >
     <div class="h-full w-full md:w-[35%]">
       <img
-        [src]="pet?.image"
-        [alt]="pet?.name"
+        [src]="p.image"
+        [alt]="p.name"
         class="object-contain w-full h-full"
       />
     </div>
-    <div class="w-full md:w-[65%] h-full pt-[30px] flex flex-col p-3">
-      <h1>Name: {{ pet?.name }}</h1>
-      <h1>Type: {{ pet?.type }}</h1>
-      <h1>Adopted: {{ pet?.adopted ? "yes" : "no" }}</h1>
+    <div class="w-full md:w-[65%] h-full pt-8 flex flex-col p-3">
+      <h1>Name: {{ p.name }}</h1>
+      <h1>Type: {{ p.type }}</h1>
+      <h1>
+        Adopted:
+        <span *ngIf="p.adopted">Yes</span>
+        <span *ngIf="!p.adopted">No</span>
+      </h1>
 
-      @if (!pet?.adopted) {
       <button
+        *ngIf="!p.adopted"
+        (click)="adopt()"
         class="w-[70px] border border-black rounded-md hover:bg-green-400 my-5"
       >
         Adopt
       </button>
-      }
 
-      <button class="w-[70px] border border-black rounded-md hover:bg-red-400">
+      <button
+        (click)="deletePet()"
+        class="w-[70px] border border-black rounded-md hover:bg-red-400"
+      >
         Delete
       </button>
     </div>
+  </div>
+</div>
+
+<div
+  *ngIf="!loading() && notFound()"
+  class="w-screen h-[90vh] flex justify-center items-center"
+>
+  <div class="text-center">
+    <p class="mb-4">
+      Pet not found. It may have been removed or never existed.
+    </p>
+    <button routerLink="/pets" class="px-4 py-2 bg-blue-600 text-white rounded">
+      Back to Pets
+    </button>
   </div>
 </div>
